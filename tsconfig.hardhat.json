@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["node", "hardhat"],
+    "composite": false
+  },
+  "include": ["hardhat.config.cjs", "scripts/**/*.cjs", "test/**/*.ts", "contracts/**/*.sol"]
+}

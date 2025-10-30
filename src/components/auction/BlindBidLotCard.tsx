@@ -1,31 +1,47 @@
 import { motion } from "framer-motion";
-import { Clock, Lock, TrendingUp } from "lucide-react";
+import { Clock, Lock, ShieldCheck } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 
 interface BlindBidLotCardProps {
-  id: string;
+  lotId: bigint;
   title: string;
-  image: string;
-  endTime: string;
-  minBid: string;
+  curator: string;
+  endTime: number;
   totalBids: number;
   status: "active" | "ended" | "upcoming";
+  encryptedReserve: `0x${string}`;
+  image: string;
 }
 
+const truncate = (value: string, visible = 6) =>
+  value.length <= visible * 2 + 2
+    ? value
+    : `${value.slice(0, visible + 2)}…${value.slice(-visible)}`;
+
 export default function BlindBidLotCard({
+  lotId,
   title,
-  image,
+  curator,
   endTime,
-  minBid,
   totalBids,
   status,
+  encryptedReserve,
+  image,
 }: BlindBidLotCardProps) {
   const statusConfig = {
     active: { label: "Live", color: "bg-primary" },
     ended: { label: "Ended", color: "bg-muted" },
     upcoming: { label: "Upcoming", color: "bg-accent" },
-  };
+  } as const;
+
+  const endDate = new Date(endTime * 1000);
+  const endLabel =
+    endTime * 1000 > Date.now()
+      ? formatDistanceToNow(endDate, { addSuffix: true })
+      : "Closed";
 
   return (
     <motion.div
@@ -34,76 +50,61 @@ export default function BlindBidLotCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
     >
-      <Card className="glass-card overflow-hidden group cursor-pointer">
-        {/* NFT Image */}
+      <Card className="glass-card overflow-hidden group">
         <div className="relative aspect-square overflow-hidden">
           <img
             src={image}
             alt={title}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
           />
-          
-          {/* Status badge */}
+
           <div className="absolute top-4 left-4">
-            <Badge className={`${statusConfig[status].color} text-background border-0`}>
-              {statusConfig[status].label}
-            </Badge>
+            <Badge className={`${statusConfig[status].color} text-background border-0`}>{
+              statusConfig[status].label
+            }</Badge>
           </div>
 
-          {/* Encrypted indicator */}
           <div className="absolute top-4 right-4 w-10 h-10 rounded-full glass-card flex items-center justify-center">
             <Lock className="w-5 h-5 text-primary" />
           </div>
 
-          {/* Gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         </div>
 
-        {/* Card content */}
-        <div className="p-6">
-          <h3 className="text-xl font-bold mb-4 text-foreground group-hover:text-luxury transition-colors">
-            {title}
-          </h3>
+        <div className="p-6 space-y-4">
+          <div>
+            <p className="text-xs uppercase tracking-wider text-muted-foreground">Lot #{lotId.toString()}</p>
+            <h3 className="text-xl font-bold text-foreground group-hover:text-luxury transition-colors">{title}</h3>
+          </div>
 
-          {/* Stats grid */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between text-sm">
+          <div className="space-y-3 text-sm">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Clock className="w-4 h-4" />
                 <span>Ends</span>
               </div>
-              <span className="font-medium text-foreground">{endTime}</span>
+              <span className="font-medium text-foreground">{endLabel}</span>
             </div>
 
-            <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-muted-foreground">
-                <TrendingUp className="w-4 h-4" />
-                <span>Min Bid</span>
+                <ShieldCheck className="w-4 h-4" />
+                <span>Encrypted reserve</span>
               </div>
-              <span className="font-bold text-primary">{minBid} ETH</span>
+              <span className="font-mono text-xs text-foreground">{truncate(encryptedReserve)}</span>
             </div>
 
-            <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Lock className="w-4 h-4" />
-                <span>Sealed Bids</span>
+                <span>Sealed bids</span>
               </div>
-              <span className="font-medium text-foreground">{totalBids}</span>
+              <span className="font-semibold text-primary">{totalBids}</span>
             </div>
           </div>
 
-          {/* Progress bar */}
-          <div className="mt-4 pt-4 border-t border-border/50">
-            <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
-              <span>Auction Progress</span>
-              <span>75%</span>
-            </div>
-            <div className="h-2 bg-muted rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-primary to-accent rounded-full"
-                style={{ width: "75%" }}
-              />
-            </div>
+          <div className="pt-4 border-t border-border/50 text-xs text-muted-foreground">
+            Curated by <span className="font-medium text-foreground">{truncate(curator)}</span>
           </div>
         </div>
       </Card>
