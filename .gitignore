@@ -42,3 +42,13 @@ playwright-report
 
 # Temp files
 tmp_*.md
+*.DS_Store
+PROJECT_COMPLETION.md
+test-fhe-loading.mjs
+
+# Build artifacts
+bun.lockb
+artifacts
+cache
+deployments
+fhevmTemp

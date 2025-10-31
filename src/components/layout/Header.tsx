@@ -18,7 +18,6 @@ import { WalletStatus } from "@/components/web3/WalletStatus";
  * - Auto-highlights active route
  * - Mobile-friendly hamburger menu
  * - Wallet integration via WalletStatus component
- * - Launch App CTA button
  */
 export default function Header() {
   // Get current route for active link highlighting
@@ -61,39 +60,44 @@ export default function Header() {
             >
               Home
             </Link>
-            <a
-              href="#features"
-              className="font-medium text-muted-foreground hover:text-primary transition-colors"
-            >
-              Features
-            </a>
-            <a
-              href="#how-it-works"
-              className="font-medium text-muted-foreground hover:text-primary transition-colors"
-            >
-              How It Works
-            </a>
             <Link
-              to="/app"
+              to="/auctions"
               className={`font-medium transition-colors hover:text-primary ${
                 !isHome ? "text-primary" : "text-muted-foreground"
               }`}
             >
               Auctions
             </Link>
+            <Link
+              to="/#features"
+              className="font-medium text-muted-foreground hover:text-primary transition-colors"
+              onClick={(e) => {
+                if (isHome) {
+                  e.preventDefault();
+                  document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}
+            >
+              Features
+            </Link>
+            <Link
+              to="/#how-it-works"
+              className="font-medium text-muted-foreground hover:text-primary transition-colors"
+              onClick={(e) => {
+                if (isHome) {
+                  e.preventDefault();
+                  document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}
+            >
+              How It Works
+            </Link>
           </nav>
 
-          {/* Desktop: Wallet & CTA */}
+          {/* Desktop: Wallet */}
           <div className="hidden md:flex items-center gap-3">
             {/* Wallet connection button */}
             <WalletStatus />
-
-            {/* Launch App button */}
-            <Link to="/app">
-              <Button className="bg-gradient-to-r from-primary to-accent hover:opacity-90 text-white font-semibold shadow-lg">
-                Launch App
-              </Button>
-            </Link>
           </div>
 
           {/* Mobile: Menu toggle button */}
@@ -127,22 +131,8 @@ export default function Header() {
               >
                 Home
               </Link>
-              <a
-                href="#features"
-                className="font-medium text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors px-2 py-1 rounded"
-                onClick={closeMobileMenu}
-              >
-                Features
-              </a>
-              <a
-                href="#how-it-works"
-                className="font-medium text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors px-2 py-1 rounded"
-                onClick={closeMobileMenu}
-              >
-                How It Works
-              </a>
               <Link
-                to="/app"
+                to="/auctions"
                 className={`font-medium transition-colors px-2 py-1 rounded ${
                   !isHome
                     ? "text-primary bg-primary/10"
@@ -152,15 +142,36 @@ export default function Header() {
               >
                 Auctions
               </Link>
+              <Link
+                to="/#features"
+                className="font-medium text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors px-2 py-1 rounded"
+                onClick={(e) => {
+                  if (isHome) {
+                    e.preventDefault();
+                    document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
+                  }
+                  closeMobileMenu();
+                }}
+              >
+                Features
+              </Link>
+              <Link
+                to="/#how-it-works"
+                className="font-medium text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors px-2 py-1 rounded"
+                onClick={(e) => {
+                  if (isHome) {
+                    e.preventDefault();
+                    document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });
+                  }
+                  closeMobileMenu();
+                }}
+              >
+                How It Works
+              </Link>
 
-              {/* Mobile: Wallet & CTA */}
+              {/* Mobile: Wallet */}
               <div className="flex flex-col gap-3 pt-4 border-t border-border/50">
                 <WalletStatus />
-                <Link to="/app" onClick={closeMobileMenu}>
-                  <Button className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 text-white font-semibold">
-                    Launch App
-                  </Button>
-                </Link>
               </div>
             </nav>
           </div>

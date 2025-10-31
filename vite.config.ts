@@ -25,4 +25,12 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  optimizeDeps: {
+    exclude: ["@zama-fhe/relayer-sdk"],
+  },
+  define: {
+    // Define process.env for browser compatibility with some libraries
+    "process.env": {},
+    global: "globalThis",
+  },
 }));

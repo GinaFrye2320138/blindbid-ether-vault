@@ -1,12 +1,9 @@
 import { ReactNode, createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { bytesToHex } from "viem";
-import {
-  createInstance,
-  initSDK,
-  SepoliaConfig,
-  type FhevmInstance,
-} from "@zama-fhe/relayer-sdk/bundle";
 import { appEnv } from "@/config/env";
+
+// Type for FHE instance (will be loaded dynamically)
+type FhevmInstance = any;
 
 /**
  * FheProvider - Fully Homomorphic Encryption (FHE) SDK Integration
@@ -94,6 +91,12 @@ export const FheProvider = ({ children }: FheProviderProps) => {
 
       try {
         console.log("[FHE] Initializing Zama FHE SDK...");
+
+        // Dynamically import the FHE SDK to avoid module loading issues
+        // Use /bundle path which includes all dependencies pre-bundled
+        const { createInstance, initSDK, SepoliaConfig } = await import(
+          "@zama-fhe/relayer-sdk/bundle"
+        );
 
         // Detect optimal thread count for WASM performance
         // Uses hardware concurrency (CPU cores) with fallback to 4

@@ -1,0 +1,33 @@
+{
+  "name": "BlindBid Auction Item #1",
+  "description": "A unique digital collectible available through BlindBid encrypted auction platform. This item features secure, private bidding using Fully Homomorphic Encryption (FHE).",
+  "image": "ipfs://QmExample123/artwork.png",
+  "external_url": "https://blindbid.example.com/item/1",
+  "attributes": [
+    {
+      "trait_type": "Category",
+      "value": "Digital Art"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Rare"
+    },
+    {
+      "trait_type": "Artist",
+      "value": "Anonymous Creator"
+    },
+    {
+      "trait_type": "Year",
+      "value": "2025"
+    },
+    {
+      "display_type": "number",
+      "trait_type": "Edition",
+      "value": 1
+    }
+  ],
+  "properties": {
+    "copyright": "© 2025 BlindBid",
+    "license": "CC BY-NC 4.0"
+  }
+}

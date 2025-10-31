@@ -31,6 +31,17 @@
     <meta name="twitter:title" content="BlindBid - Confidential NFT Auctions" />
     <meta name="twitter:description" content="Submit encrypted bids for exclusive NFTs with complete privacy using Zama FHE" />
     <meta name="twitter:image" content="/logo.svg" />
+
+    <!-- Performance Optimizations -->
+    <link rel="preconnect" href="https://cdn.zama.ai" crossorigin />
+
+    <!-- FHE SDK - Loaded from Zama CDN -->
+    <!--
+      Load Zama FHE SDK via CDN for client-side encryption
+      Version: 0.2.0 (stable)
+      Documentation: https://docs.zama.ai/fhevm
+    -->
+    <script src="https://cdn.zama.ai/relayer-sdk-js/0.2.0/relayer-sdk-js.umd.cjs" defer></script>
   </head>
 
   <body>

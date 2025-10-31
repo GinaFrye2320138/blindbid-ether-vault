@@ -13,7 +13,8 @@
     "test:contracts": "hardhat test",
     "deploy:sepolia": "node scripts/deploy-sepolia.cjs",
     "verify:sepolia": "node scripts/verify-sepolia.cjs",
-    "export:abi": "node scripts/export-abi.cjs"
+    "export:abi": "node scripts/export-abi.cjs",
+    "create:auction": "node scripts/create-auction.cjs"
   },
   "dependencies": {
     "@fhevm/hardhat-plugin": "^0.1.0",

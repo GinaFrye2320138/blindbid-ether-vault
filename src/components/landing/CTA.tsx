@@ -39,7 +39,7 @@ export default function CTA() {
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-                <Link to="/app">
+                <Link to="/auctions">
                   <Button 
                     size="lg" 
                     className="group bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-10 py-6 text-lg"

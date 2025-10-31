@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { Lock, Send, Shield, Info, KeyRound } from "lucide-react";
-import { useAccount, useSwitchNetwork, useWalletClient, usePublicClient } from "wagmi";
+import { useAccount, useWalletClient, usePublicClient } from "wagmi";
 import { sepolia } from "wagmi/chains";
 import { parseEther, keccak256, toUtf8Bytes } from "ethers";
 import { type Address } from "viem";
@@ -14,11 +14,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import blindBidAbi from "@/abi/BlindBidAuction.json";
-import { useFheContext } from "@/providers/FheProvider";
+import { encryptBid, getFheState, onFheStateChange, type FheInitState } from "@/lib/fhe";
+import { appEnv } from "@/config/env";
 import type { LotSummary } from "@/hooks/useLots";
 
 interface BlindBidSubmissionFormProps {
   lots: LotSummary[];
+  selectedLotId: string | null;
 }
 
 interface BidFormValues {
@@ -34,13 +36,19 @@ const generateSalt = () => {
     .join("")}`;
 };
 
-export default function BlindBidSubmissionForm({ lots }: BlindBidSubmissionFormProps) {
-  const { ready, encryptBid, contractAddress } = useFheContext();
+export default function BlindBidSubmissionForm({ lots, selectedLotId }: BlindBidSubmissionFormProps) {
+  const [fheState, setFheState] = useState<FheInitState>(getFheState());
   const { address, chainId, status } = useAccount();
-  const { switchNetworkAsync, isLoading: switching } = useSwitchNetwork();
   const { data: walletClient } = useWalletClient();
   const publicClient = usePublicClient();
   const queryClient = useQueryClient();
+  const [switching, setSwitching] = useState(false);
+
+  // Subscribe to FHE state changes
+  useEffect(() => {
+    const unsubscribe = onFheStateChange(setFheState);
+    return unsubscribe;
+  }, []);
 
   const defaultLotId = useMemo(() => (lots.length > 0 ? lots[0].id.toString() : ""), [lots]);
 
@@ -60,17 +68,19 @@ export default function BlindBidSubmissionForm({ lots }: BlindBidSubmissionFormP
     }
   }, [defaultLotId, setValue]);
 
+  // Update form when a lot is clicked
+  useEffect(() => {
+    if (selectedLotId) {
+      setValue("lotId", selectedLotId);
+    }
+  }, [selectedLotId, setValue]);
+
   const [isEncrypting, setEncrypting] = useState(false);
   const [isSubmitting, setSubmitting] = useState(false);
 
   const onSubmit = handleSubmit(async (values) => {
-    if (!contractAddress) {
-      toast.error("Contract address missing. Please configure VITE_APP_CONTRACT_ADDRESS.");
-      return;
-    }
-
-    if (!ready) {
-      toast.error("FHE relayer is still initialising. Please retry in a moment.");
+    if (fheState.status !== 'ready') {
+      toast.error("FHE encryption not ready. Please wait...");
       return;
     }
 
@@ -90,12 +100,76 @@ export default function BlindBidSubmissionForm({ lots }: BlindBidSubmissionFormP
       return;
     }
 
+    // Check if on correct network
     if (chainId !== sepolia.id) {
-      if (!switchNetworkAsync) {
-        toast.error("Wallet does not support chain switching. Change to Sepolia manually.");
-        return;
+      console.log(`[BidSubmission] Current chain: ${chainId}, need Sepolia (${sepolia.id})`);
+
+      try {
+        console.log("[BidSubmission] Requesting network switch to Sepolia...");
+        setSwitching(true);
+        const toastId = toast.info("Please approve network switch in your wallet", { duration: Infinity });
+
+        // Use wallet_switchEthereumChain RPC method directly
+        if (walletClient?.account) {
+          await walletClient.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: `0x${sepolia.id.toString(16)}` }], // Convert to hex
+          });
+          console.log("[BidSubmission] Network switched successfully");
+          toast.dismiss(toastId);
+          toast.success("Switched to Sepolia network");
+
+          // Wait for wagmi to update chainId
+          await new Promise(resolve => setTimeout(resolve, 500));
+        } else {
+          toast.dismiss(toastId);
+          toast.error("Wallet not properly connected");
+          return;
+        }
+      } catch (error: any) {
+        console.error("[BidSubmission] Network switch error:", error);
+
+        // Error code 4902 means the chain hasn't been added to MetaMask yet
+        if (error.code === 4902) {
+          try {
+            console.log("[BidSubmission] Adding Sepolia network to wallet...");
+            await walletClient?.request({
+              method: 'wallet_addEthereumChain',
+              params: [{
+                chainId: `0x${sepolia.id.toString(16)}`,
+                chainName: 'Sepolia',
+                nativeCurrency: {
+                  name: 'Sepolia ETH',
+                  symbol: 'ETH',
+                  decimals: 18,
+                },
+                rpcUrls: ['https://rpc.sepolia.org'],
+                blockExplorerUrls: ['https://sepolia.etherscan.io'],
+              }],
+            });
+            console.log("[BidSubmission] Network added and switched");
+            toast.success("Switched to Sepolia network");
+
+            // Wait for wagmi to update chainId
+            await new Promise(resolve => setTimeout(resolve, 500));
+          } catch (addError) {
+            console.error("[BidSubmission] Failed to add network:", addError);
+            toast.error("Failed to add Sepolia network. Please add it manually.");
+            return;
+          }
+        } else if (error.code === 4001) {
+          // User rejected the request
+          toast.error("Network switch cancelled. Please switch to Sepolia to continue.");
+          return;
+        } else {
+          toast.error(`Failed to switch network: ${error.message || 'Unknown error'}`);
+          return;
+        }
+      } finally {
+        setSwitching(false);
       }
-      await switchNetworkAsync(sepolia.id);
+    } else {
+      console.log("[BidSubmission] Already on Sepolia network");
     }
 
     if (!walletClient) {
@@ -107,12 +181,16 @@ export default function BlindBidSubmissionForm({ lots }: BlindBidSubmissionFormP
       setEncrypting(true);
       setSubmitting(true);
       const weiAmount = parseEther(values.amount);
-      const encrypted = await encryptBid({ value: weiAmount, account: address });
+      const encrypted = await encryptBid(
+        appEnv.contractAddress as Address,
+        address as Address,
+        weiAmount
+      );
       const salt = values.salt.trim() || generateSalt();
       const saltHash = keccak256(toUtf8Bytes(salt));
 
       const hash = await walletClient.writeContract({
-        address: contractAddress as Address,
+        address: appEnv.contractAddress as Address,
         abi: blindBidAbi,
         functionName: "submitBid",
         args: [BigInt(values.lotId), encrypted.ciphertext, encrypted.inputProof, saltHash],
@@ -140,7 +218,7 @@ export default function BlindBidSubmissionForm({ lots }: BlindBidSubmissionFormP
     }
   });
 
-  const encryptionDisabled = !ready || !contractAddress || status !== "connected";
+  const encryptionDisabled = fheState.status !== 'ready' || status !== "connected";
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>

@@ -46,7 +46,7 @@ export default function Hero() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 mb-12">
-              <Link to="/app">
+              <Link to="/auctions">
                 <Button size="lg" className="group relative overflow-hidden bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-8 py-6 text-lg">
                   <span className="relative z-10 flex items-center gap-2">
                     Launch Auction

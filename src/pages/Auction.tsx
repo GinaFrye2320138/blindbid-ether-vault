@@ -1,11 +1,13 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Sparkles, Filter } from "lucide-react";
+import { Plus, TrendingUp, Shield } from "lucide-react";
 
 import Header from "@/components/layout/Header";
 import BlindBidLotCard from "@/components/auction/BlindBidLotCard";
 import BlindBidSubmissionForm from "@/components/auction/BlindBidSubmissionForm";
+import { CreateAuctionDialog } from "@/components/auction/CreateAuctionDialog";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import nftPreview1 from "@/assets/nft-preview-1.jpg";
 import nftPreview2 from "@/assets/nft-preview-2.jpg";
 import nftPreview3 from "@/assets/nft-preview-3.jpg";
@@ -23,6 +25,7 @@ const deriveStatus = (startTime: number, endTime: number, closed: boolean): "act
 
 export default function Auction() {
   const { data: lots = [], isLoading } = useLots();
+  const [selectedLotId, setSelectedLotId] = useState<string | null>(null);
 
   const decoratedLots = useMemo(
     () =>
@@ -35,6 +38,7 @@ export default function Auction() {
         status: deriveStatus(lot.startTime, lot.endTime, lot.closed),
         encryptedReserve: lot.encryptedReserve,
         image: artworkPool[index % artworkPool.length],
+        metadataURI: lot.metadataURI,
       })),
     [lots],
   );
@@ -42,84 +46,94 @@ export default function Auction() {
   const activeCount = decoratedLots.filter((lot) => lot.status === "active").length;
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-background">
       <Header />
 
-      <section className="pt-32 pb-16 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-secondary via-background to-background" />
-        <div className="absolute top-20 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
+      {/* Compact Header */}
+      <section className="pt-24 pb-8 border-b border-border/50">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            {/* Left: Title & Stats */}
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-3">
+                <h1 className="text-3xl md:text-4xl font-bold text-foreground">
+                  Live Auctions
+                </h1>
+                <Badge variant="secondary" className="px-3 py-1">
+                  <Shield className="w-3 h-3 mr-1" />
+                  FHE Encrypted
+                </Badge>
+              </div>
 
-        <div className="container relative z-10 mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center max-w-3xl mx-auto mb-12"
-          >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card mb-6">
-              <Sparkles className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium">Encrypted Auctions</span>
+              <div className="flex items-center gap-6 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                  <span className="text-muted-foreground">
+                    <span className="font-semibold text-foreground">{activeCount}</span> Active
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">
+                    <span className="font-semibold text-foreground">{lots.length}</span> Total
+                  </span>
+                </div>
+              </div>
             </div>
 
-            <h1 className="text-5xl md:text-6xl font-bold mb-6">
-              <span className="text-luxury">Exclusive NFT</span>
-              <br />
-              <span className="text-foreground">Blind Auctions</span>
-            </h1>
-
-            <p className="text-xl text-muted-foreground leading-relaxed">
-              Submit sealed bids that stay private until the curator triggers reveal. Contracts live on Sepolia at
-              <span className="font-mono text-sm text-primary block mt-2">{appEnv.contractAddress ?? "configure contract address"}</span>
-            </p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.6 }}
-            className="flex flex-wrap items-center justify-between gap-4 mb-8"
-          >
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <span className="text-sm">Showing</span>
-              <span className="font-semibold text-foreground">{activeCount}</span>
-              <span className="text-sm">active auctions</span>
+            {/* Right: Actions */}
+            <div className="flex items-center gap-3">
+              <CreateAuctionDialog />
             </div>
-
-            <Button variant="outline" size="sm" className="gap-2" disabled>
-              <Filter className="w-4 h-4" />
-              Filter (soon)
-            </Button>
-          </motion.div>
+          </div>
         </div>
       </section>
 
-      <section className="pb-24">
+      {/* Main Content */}
+      <section className="py-8">
         <div className="container mx-auto px-4">
-          <div className="grid lg:grid-cols-3 gap-8">
+          <div className="grid lg:grid-cols-3 gap-6">
+            {/* Auction Cards - 2 columns on desktop */}
             <div className="lg:col-span-2">
               {isLoading ? (
-                <div className="grid md:grid-cols-2 gap-6">
+                <div className="grid md:grid-cols-2 gap-4">
                   {[...Array(4)].map((_, index) => (
-                    <div key={index} className="h-96 glass-card animate-pulse" />
+                    <div key={index} className="h-[420px] rounded-xl bg-muted/30 animate-pulse" />
                   ))}
                 </div>
               ) : decoratedLots.length > 0 ? (
-                <div className="grid md:grid-cols-2 gap-6">
+                <div className="grid md:grid-cols-2 gap-4">
                   {decoratedLots.map((lot) => (
-                    <BlindBidLotCard key={lot.lotId.toString()} {...lot} />
+                    <BlindBidLotCard
+                      key={lot.lotId.toString()}
+                      {...lot}
+                      onClick={() => setSelectedLotId(lot.lotId.toString())}
+                      isSelected={selectedLotId === lot.lotId.toString()}
+                    />
                   ))}
                 </div>
               ) : (
-                <div className="glass-card p-12 text-center text-muted-foreground">
-                  <h3 className="text-xl font-semibold text-foreground mb-2">No lots yet</h3>
-                  <p>Curators can create a lot via the Hardhat tasks to populate the marketplace.</p>
+                <div className="rounded-xl border-2 border-dashed border-border p-16 text-center">
+                  <div className="flex flex-col items-center gap-4 max-w-md mx-auto">
+                    <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+                      <Plus className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-semibold text-foreground mb-2">No Active Auctions</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Be the first to create an auction and start accepting encrypted bids.
+                      </p>
+                    </div>
+                    <CreateAuctionDialog />
+                  </div>
                 </div>
               )}
             </div>
 
+            {/* Bid Submission Form - Sticky sidebar */}
             <div className="lg:col-span-1">
               <div className="sticky top-24">
-                <BlindBidSubmissionForm lots={lots} />
+                <BlindBidSubmissionForm lots={lots} selectedLotId={selectedLotId} />
               </div>
             </div>
           </div>
