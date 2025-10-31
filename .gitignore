@@ -44,6 +44,7 @@ playwright-report
 tmp_*.md
 *.DS_Store
 PROJECT_COMPLETION.md
+CLEANUP_SUMMARY.md
 test-fhe-loading.mjs
 
 # Build artifacts

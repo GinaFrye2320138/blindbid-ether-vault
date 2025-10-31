@@ -27,15 +27,8 @@ fi
 echo "Adding all changes..."
 git add -A
 
-# Create commit with Claude Code attribution
-git commit -m "$(cat <<EOF
-$COMMIT_MSG
-
-Generated with [Claude Code](https://claude.com/claude-code)
-
-Co-Authored-By: Claude <noreply@anthropic.com>
-EOF
-)"
+# Create commit with message only
+git commit -m "$COMMIT_MSG"
 
 # Push to origin
 echo "Pushing to GitHub..."
