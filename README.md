@@ -4,6 +4,12 @@
 
 BlindBid enables galleries and collectors to conduct sealed-bid NFT auctions where bid amounts remain encrypted throughout the bidding process. Winners are determined through homomorphic computations on encrypted data, ensuring fair price discovery without revealing collector strategies.
 
+## 🚀 Live Demo
+
+**Deployed Application**: [https://blindbid.vercel.app](https://blindbid.vercel.app)
+
+**Deployed Contract**: [0x823dbCbb01411c3710F17882b3ec440091f9500D](https://sepolia.etherscan.io/address/0x823dbCbb01411c3710F17882b3ec440091f9500D) (Sepolia)
+
 ---
 
 ## 🎯 Vision

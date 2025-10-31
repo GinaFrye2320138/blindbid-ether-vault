@@ -53,3 +53,4 @@ artifacts
 cache
 deployments
 fhevmTemp
+.vercel
